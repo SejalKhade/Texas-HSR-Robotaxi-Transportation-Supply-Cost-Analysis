@@ -1,0 +1,13 @@
+venv/
+.env
+data/raw/
+data/outputs/
+*.duckdb
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+*.egg-info/
+dist/
+build/
