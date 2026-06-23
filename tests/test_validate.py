@@ -4,7 +4,7 @@ Unit tests for src/validate.py — Pandera schema checks.
 
 import pytest
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 from src.validate import validate_population, validate_ercot, validate_baseline
 
 
