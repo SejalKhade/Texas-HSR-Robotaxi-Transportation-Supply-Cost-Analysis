@@ -51,6 +51,20 @@ st.markdown(
     "3 adoption scenarios • 1,000 Monte Carlo simulations**"
 )
 
+# Data source indicator
+import os
+from src.config import FILES
+files_present = sum(1 for p in FILES.values() if p.exists())
+if files_present < len(FILES):
+    st.info(
+        f"ℹ️ **Running on model baseline data** ({files_present}/{len(FILES)} source files loaded). "
+        "Add TxDOT, BTS, ERCOT, EPA, and Census files to `data/raw/` and rerun the pipeline "
+        "to see results from real government data.",
+        icon="📂"
+    )
+else:
+    st.success(f"✅ All {files_present} government data sources loaded.", icon="📊")
+
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("⚙️ Controls")
@@ -84,11 +98,40 @@ try:
     # ── KPI Row ──────────────────────────────────────────────────────────────
     st.subheader(f"📊 Key Performance Indicators — {scenario} Adoption")
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Annual Riders",       f"{filtered['hsr_annual_riders'].sum():,.0f}")
-    c2.metric("CO₂ Avoided (tons)",  f"{filtered['avoided_metric_tons_co2'].sum():,.0f}")
-    c3.metric("Annual Revenue",      f"${filtered['annual_revenue_usd'].sum()/1e6:.1f}M")
-    c4.metric("Time Saved vs Drive", f"{filtered['time_savings_vs_drive_hr'].mean():.1f} hrs")
-    c5.metric("Cost Saved vs Car",   f"${filtered['cost_savings_vs_car_usd'].mean():.0f}")
+
+    c1.metric(
+        "Annual Riders",
+        f"{filtered['hsr_annual_riders'].sum():,.0f}",
+        help="Total projected HSR passengers per year across selected routes"
+    )
+    c2.metric(
+        "CO₂ Avoided (tons/yr)",
+        f"{filtered['avoided_metric_tons_co2'].sum():,.0f}",
+        help="Net CO₂ avoided vs car + flight baseline (accounting for ERCOT grid emissions)"
+    )
+    c3.metric(
+        "Annual Revenue",
+        f"${filtered['annual_revenue_usd'].sum()/1e6:.1f}M",
+        help="Estimated ticket revenue at scenario fare price"
+    )
+    c4.metric(
+        "Time Saved vs Driving",
+        f"{filtered['time_savings_vs_drive_hr'].mean():.1f} hrs",
+        help="Door-to-door time saved compared to driving (including robotaxi first/last mile)"
+    )
+
+    # Cost vs flight is the meaningful comparison — HSR competes with flying, not driving
+    cost_vs_flight = filtered["cost_savings_vs_flight_usd"].mean()
+    cost_vs_car    = filtered["cost_savings_vs_car_usd"].mean()
+    c5.metric(
+        "Cost Saved vs Flight",
+        f"${cost_vs_flight:.0f}",
+        delta=f"${abs(cost_vs_car):.0f} {'more' if cost_vs_car < 0 else 'less'} than driving",
+        delta_color="off",
+        help=f"HSR saves ${cost_vs_flight:.0f} vs flying. "
+             f"HSR costs ${abs(cost_vs_car):.0f} {'more' if cost_vs_car < 0 else 'less'} than driving — "
+             f"competitive advantage vs car is TIME ({filtered['time_savings_vs_drive_hr'].mean():.1f} hrs saved), not cost."
+    )
 
     st.divider()
 
