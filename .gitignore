@@ -2,7 +2,7 @@ venv/
 .env
 data/raw/
 data/outputs/
-*.duckdb
+#*.duckdb
 __pycache__/
 *.pyc
 .pytest_cache/
