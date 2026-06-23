@@ -37,10 +37,14 @@ jobs:
 
       - name: Validate config imports
         run: python -c "from src.config import FILES, ROUTES, SCENARIOS, GRAVITY_WEIGHTS; print('Config OK')"
+        env:
+          DATA_RAW_DIR: ./data/raw
+          DATA_PROCESSED_DIR: ./data/processed
+          DATA_OUTPUT_DIR: ./data/outputs
+          DB_PATH: ./data/hsr_analysis.duckdb
 
       - name: Run unit tests with coverage
-        run: |
-          pytest tests/ -v --cov=src --cov-report=term-missing
+        run: pytest tests/ -v --cov=src --cov-report=term-missing
         env:
           DATA_RAW_DIR: ./data/raw
           DATA_PROCESSED_DIR: ./data/processed
