@@ -8,7 +8,7 @@
 
 End-to-end analytics pipeline quantifying the cost, emissions, and demand impact of High-Speed Rail with autonomous robotaxi first/last-mile service across three Texas corridors.
 
-**[🚄 Live Dashboard →](https://texas-hsr-robotaxi-analysis-krq2zexxxymto8skk8p4bx.streamlit.app/)**
+**[🚄 Live Dashboard →](https://texas-hsr-robotaxi-transportation-supply-cost-analysis-ybo8p2r.streamlit.app/)**
 
 ---
 
