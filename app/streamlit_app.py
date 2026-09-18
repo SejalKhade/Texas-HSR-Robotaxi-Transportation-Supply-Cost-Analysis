@@ -51,8 +51,23 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
     m = folium.Map(
         location=[31.0, -98.5],
         zoom_start=6,
-        tiles="CartoDB dark_matter",
+        tiles=None,
     )
+    # CartoDB now requires a paid API key for its basemap tiles, so we use
+    # Esri's free dark-canvas basemap instead (base + labels/roads reference).
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+        attr="Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, GIS User Community",
+        name="Dark Basemap",
+        control=False,
+    ).add_to(m)
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+        attr="Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, GIS User Community",
+        name="Labels",
+        control=False,
+        overlay=True,
+    ).add_to(m)
 
     # Route colors
     ROUTE_COLORS = {
