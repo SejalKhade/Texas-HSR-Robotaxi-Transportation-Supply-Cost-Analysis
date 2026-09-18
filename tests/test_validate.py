@@ -2,10 +2,11 @@
 Unit tests for src/validate.py — Pandera schema checks.
 """
 
-import pytest
 import pandas as pd
 import pandera.pandas as pa
-from src.validate import validate_population, validate_ercot, validate_baseline
+import pytest
+
+from src.validate import validate_baseline, validate_ercot, validate_population
 
 
 def test_valid_population_passes():

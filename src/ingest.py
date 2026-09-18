@@ -4,10 +4,11 @@ Each function loads a raw file and returns a clean DataFrame.
 """
 
 import warnings
-import pandas as pd
-import duckdb
 
-from src.config import FILES, DB_PATH, CITY_POP_FALLBACK
+import duckdb
+import pandas as pd
+
+from src.config import CITY_POP_FALLBACK, DB_PATH, FILES
 
 warnings.filterwarnings("ignore")
 
@@ -28,7 +29,7 @@ def load_population() -> pd.DataFrame:
             raw = str(df.iloc[0][pop_col]).replace(",", "").replace(" ", "")
             val = pd.to_numeric(raw, errors="coerce")
             pop = int(val) if pd.notna(val) and val > 0 else CITY_POP_FALLBACK[city]
-        except Exception:
+        except Exception:  # noqa: BLE001 — malformed Census CSV falls back to known values
             pop = CITY_POP_FALLBACK[city]
         records.append({"city": city, "population": pop})
 
@@ -83,7 +84,7 @@ def load_epa_factors() -> dict:
             "flight_kg_per_passenger_mile": _find("air travel",     DEFAULTS["flight_kg_per_passenger_mile"]),
             "ercot_kg_per_kwh":             DEFAULTS["ercot_kg_per_kwh"],
         }
-    except Exception:
+    except Exception:  # noqa: BLE001 — malformed EPA CSV falls back to known factors
         return DEFAULTS
 
 
@@ -116,7 +117,7 @@ def load_bts(sample_rows: int = 500_000) -> pd.DataFrame:
             low_memory=False,
             on_bad_lines="skip",
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 — malformed BTS CSV falls back to an empty frame
         return pd.DataFrame(columns=["origin", "dest", "passengers", "fare"])
 
 
@@ -143,7 +144,7 @@ def write_to_db(
     conn.execute("CREATE TABLE scenario_results    AS SELECT * FROM results")
     conn.execute("CREATE TABLE monte_carlo_results AS SELECT * FROM mc_results")
 
-    ef_df = pd.DataFrame([ef])  # noqa: F841
+    ef_df = pd.DataFrame([ef])
     conn.register("ef_df", ef_df)
     conn.execute("CREATE TABLE emission_factors AS SELECT * FROM ef_df")
 

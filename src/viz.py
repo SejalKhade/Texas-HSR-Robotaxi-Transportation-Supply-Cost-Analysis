@@ -3,9 +3,9 @@ Visualization helpers — chart builders for both Streamlit and standalone use.
 All functions return Plotly figures.
 """
 
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
 
 
 def mode_shift_bar(results: pd.DataFrame) -> go.Figure:

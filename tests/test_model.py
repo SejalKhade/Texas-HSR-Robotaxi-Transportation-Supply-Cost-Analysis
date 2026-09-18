@@ -3,11 +3,17 @@ Unit tests for src/model.py — gravity model, emissions, scenarios, Monte Carlo
 Run with: pytest tests/ -v
 """
 
-import pytest
 import pandas as pd
-from src.model import allocate_riders, add_energy_emissions, run_scenario, run_all_scenarios, monte_carlo
-from src.transform import normalize_series
+import pytest
 
+from src.model import (
+    add_energy_emissions,
+    allocate_riders,
+    monte_carlo,
+    run_all_scenarios,
+    run_scenario,
+)
+from src.transform import normalize_series
 
 # ── Shared fixtures ────────────────────────────────────────────────────────
 

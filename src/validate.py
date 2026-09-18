@@ -4,8 +4,7 @@ Call these functions before running the model to catch bad data early.
 """
 
 import pandas as pd
-from pandera.pandas import Column, DataFrameSchema, Check
-
+from pandera.pandas import Check, Column, DataFrameSchema
 
 ERCOT_SCHEMA = DataFrameSchema(
     columns={

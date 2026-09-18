@@ -4,7 +4,8 @@ All functions: DataFrame in → DataFrame out.
 """
 
 import pandas as pd
-from src.config import ROUTES, CITY_POP_FALLBACK
+
+from src.config import CITY_POP_FALLBACK, ROUTES
 
 
 def normalize_series(s: pd.Series) -> pd.Series:

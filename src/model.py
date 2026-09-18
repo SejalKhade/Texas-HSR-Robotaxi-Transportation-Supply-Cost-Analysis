@@ -10,15 +10,15 @@ import numpy as np
 import pandas as pd
 
 from src.config import (
+    AVG_CAR_OCCUPANCY,
+    DEADHEAD_MULTIPLIER,
+    FIRST_LAST_MILE_DIST,
     GRAVITY_WEIGHTS,
     HSR_KWH_PER_PASSENGER_MILE,
     ROBOTAXI_MILES_PER_KWH,
-    AVG_CAR_OCCUPANCY,
-    FIRST_LAST_MILE_DIST,
-    DEADHEAD_MULTIPLIER,
+    SCENARIOS,
     STATION_BASE_LOAD_MW,
     TRAIN_TRACTION_PEAK_MW,
-    SCENARIOS,
 )
 from src.transform import normalize_series
 
