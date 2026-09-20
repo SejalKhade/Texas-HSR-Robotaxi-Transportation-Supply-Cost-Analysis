@@ -91,16 +91,32 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
         "Houston-San Antonio": ("Houston", "San Antonio"),
     }
 
-    # Aggregate KPIs per route
-    high = all_results[all_results["scenario"] == "High"]
-    route_kpis = high.set_index("route")
+    # KPIs per route for the scenario/routes currently selected in the sidebar
+    scenario_name = filtered["scenario"].iloc[0]
+    route_kpis = filtered.set_index("route")
 
-    # Draw animated route lines
+    # Fixed circle scale (largest city total across all scenarios) so sizes
+    # visibly change between Low / Medium / High.
+    city_routes = {
+        "Dallas":      ["Dallas-Houston", "Dallas-Austin"],
+        "Houston":     ["Dallas-Houston", "Houston-San Antonio"],
+        "Austin":      ["Dallas-Austin"],
+        "San Antonio": ["Houston-San Antonio"],
+    }
+    max_city_riders = max(
+        all_results[all_results["route"].isin(rts)]
+        .groupby("scenario")["hsr_annual_riders"].sum().max()
+        for rts in city_routes.values()
+    )
+
+    # Draw animated route lines for the selected routes only
     for route, (city_a, city_b) in ROUTE_PAIRS.items():
+        if route not in route_kpis.index:
+            continue
         coords = [CITIES[city_a], CITIES[city_b]]
         color  = ROUTE_COLORS.get(route, "#FFFFFF")
-        riders = route_kpis.loc[route, "hsr_annual_riders"] if route in route_kpis.index else 0
-        co2    = route_kpis.loc[route, "avoided_metric_tons_co2"] if route in route_kpis.index else 0
+        riders = route_kpis.loc[route, "hsr_annual_riders"]
+        co2    = route_kpis.loc[route, "avoided_metric_tons_co2"]
 
         # Animated dashed line (AntPath shows movement direction)
         AntPath(
@@ -108,7 +124,7 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
             color=color,
             weight=4,
             delay=800,
-            tooltip=f"<b>{route}</b><br>Annual riders (High): {riders:,.0f}<br>CO₂ avoided: {co2:,.0f} tons/yr",
+            tooltip=f"<b>{route}</b><br>Annual riders ({scenario_name}): {riders:,.0f}<br>CO₂ avoided: {co2:,.0f} tons/yr",
         ).add_to(m)
 
         # Static thicker line behind animation
@@ -122,27 +138,19 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
     # City markers with KPI popups
     marker_cluster = MarkerCluster(name="Cities").add_to(m)
 
-    city_routes = {
-        "Dallas":      ["Dallas-Houston", "Dallas-Austin"],
-        "Houston":     ["Dallas-Houston", "Houston-San Antonio"],
-        "Austin":      ["Dallas-Austin"],
-        "San Antonio": ["Houston-San Antonio"],
-    }
-
     for city, coords in CITIES.items():
-        routes_here = city_routes.get(city, [])
-        total_riders = sum(
-            route_kpis.loc[r, "hsr_annual_riders"]
-            for r in routes_here if r in route_kpis.index
-        )
+        routes_here = [r for r in city_routes[city] if r in route_kpis.index]
+        if not routes_here:
+            continue
+        total_riders = sum(route_kpis.loc[r, "hsr_annual_riders"] for r in routes_here)
         popup_html = f"""
         <div style='font-family:sans-serif;min-width:150px'>
             <b style='font-size:14px'>{city}</b><br>
             <hr style='margin:4px 0'>
             <b>Connecting routes:</b><br>
-            {'<br>'.join(routes_here) if routes_here else 'Hub only'}<br>
+            {'<br>'.join(routes_here)}<br>
             <hr style='margin:4px 0'>
-            <b>High adoption riders:</b><br>
+            <b>{scenario_name} adoption riders:</b><br>
             {total_riders:,.0f}/year
         </div>
         """
@@ -161,7 +169,7 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
         # Circle showing relative ridership size
         folium.CircleMarker(
             location=coords,
-            radius=max(8, min(25, total_riders / 100_000)),
+            radius=8 + 22 * total_riders / max_city_riders,
             color="#FFD700",
             fill=True,
             fill_color="#FFD700",
@@ -170,14 +178,21 @@ def build_corridor_map(filtered: pd.DataFrame, all_results: pd.DataFrame) -> str
         ).add_to(m)
 
     # Legend
-    legend_html = """
+    ROUTE_LABELS = {
+        "Dallas-Houston":      "Dallas – Houston (239 mi)",
+        "Dallas-Austin":       "Dallas – Austin (195 mi)",
+        "Houston-San Antonio": "Houston – San Antonio (197 mi)",
+    }
+    legend_rows = "".join(
+        f'<span style="color:{ROUTE_COLORS[r]}">●</span> {ROUTE_LABELS[r]}<br>'
+        for r in ROUTE_PAIRS if r in route_kpis.index
+    )
+    legend_html = f"""
     <div style="position:fixed;bottom:30px;left:30px;z-index:1000;
                 background:#1a1a2e;padding:12px 16px;border-radius:8px;
                 border:1px solid #444;font-family:sans-serif;font-size:12px;color:white">
-        <b style="font-size:13px">HSR Corridors</b><br><br>
-        <span style="color:#00CC96">●</span> Dallas – Houston (239 mi)<br>
-        <span style="color:#636EFA">●</span> Dallas – Austin (195 mi)<br>
-        <span style="color:#EF553B">●</span> Houston – San Antonio (197 mi)<br>
+        <b style="font-size:13px">HSR Corridors — {scenario_name} adoption</b><br><br>
+        {legend_rows}
         <br>
         <span style="color:#FFD700">◎</span> Circle size = ridership volume
     </div>
